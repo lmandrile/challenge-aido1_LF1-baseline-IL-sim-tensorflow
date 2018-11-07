@@ -10,6 +10,7 @@ SEED = 1234
 STORAGE_LOCATION = "trained_models/behavioral_cloning"
 EPISODES = 10
 STEPS = 65
+DEBUG = True
 
 env = DuckietownEnv(
     map_name='udem1',  # check the Duckietown Gym documentation, there are many maps of different complexity
@@ -33,6 +34,11 @@ for episode in range(0, EPISODES):
     for steps in range(0, STEPS):
         action = model.predict(observation)
         observation, reward, done, info = env.step(action)
+        # we may use this to debug our expert.
+        if DEBUG:
+            cv2.imshow('debug', observation)
+            cv2.waitKey(1)
+        
         cumulative_reward += reward
         if done:
             env.reset()

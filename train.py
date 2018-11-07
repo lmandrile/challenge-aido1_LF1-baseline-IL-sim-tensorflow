@@ -7,8 +7,10 @@ from model import TensorflowModel
 # configuration zone
 BATCH_SIZE = 32
 EPOCHS = 10
+TOP_CROP_VALUE = 17
+
 # here we assume the observations have been resized to 60x80
-OBSERVATIONS_SHAPE = (None, 60, 80, 3)
+OBSERVATIONS_SHAPE = (None, 60-TOP_CROP_VALUE, 80, 3)
 ACTIONS_SHAPE = (None, 2)
 SEED = 1234
 STORAGE_LOCATION = "trained_models/behavioral_cloning"
