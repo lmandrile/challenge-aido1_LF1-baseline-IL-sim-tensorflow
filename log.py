@@ -6,12 +6,12 @@ from _loggers import Logger
 
 # Log configuration, you can pick your own values here
 # the more the better? or the smarter the better?
-EPISODES = 50
+EPISODES = 500
 STEPS = 512
 
-DEBUG = True
+DEBUG = False
 TOP_CROP_VALUE = 17
-ERROR_GENERATION_CHANCE = 3
+ERROR_GENERATION_CHANCE = 1
 STEPS_PER_ERROR_GENERATION = 20
 
 
@@ -41,13 +41,16 @@ for episode in range(0, EPISODES):
             error_being_induced = False
 
         if error_being_induced == True:
-            action = (0.8,2)
+            action = (0.8,random.randint(-3,3))
         else:
             # we use our 'expert' to predict the next action.
             action = expert.predict(None)
 
         
-        observation, reward, done, info = env.step(action)
+        try:
+            observation, reward, done, info = env.step(action)
+        except:
+            break
         # we can resize the image here
         observation = cv2.resize(observation, (80, 60))
         observation = observation[TOP_CROP_VALUE:60, 0:80]
