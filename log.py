@@ -6,18 +6,27 @@ from _loggers import Logger
 
 # Log configuration, you can pick your own values here
 # the more the better? or the smarter the better?
-EPISODES = 500
-STEPS = 512
 
-DEBUG = False
+#EPISODES = 45
+#STEPS = 512
+EPISODES = 1500
+STEPS = 200
+
+
+DEBUG = True
 TOP_CROP_VALUE = 17
 ERROR_GENERATION_CHANCE = 1
 STEPS_PER_ERROR_GENERATION = 20
 
 
+    
+
 env = DuckietownEnv(
     map_name='udem1',  # check the Duckietown Gym documentation, there are many maps of different complexity
-    max_steps=EPISODES * STEPS
+    max_steps=EPISODES * STEPS,
+    domain_rand=False,
+    distortion=True,
+    
 )
 
 # this is an imperfect demonstrator... I'm sure you can construct a better one.
@@ -28,35 +37,38 @@ logger = Logger(env, log_file='train.log')
 
 error_being_induced = False
 error_step_count = STEPS_PER_ERROR_GENERATION
+steer_error = 0
 
 # let's collect our samples
 for episode in range(0, EPISODES):
     for steps in range(0, STEPS):
-    
-        
+
         if error_being_induced == False and random.randint(1,101)<=ERROR_GENERATION_CHANCE:
             error_being_induced = True
             error_step_count = STEPS_PER_ERROR_GENERATION
+            steer_error = random.randint(-1,1)
+
         elif error_being_induced == True and error_step_count == 0:
             error_being_induced = False
-
-        if error_being_induced == True:
-            action = (0.8,random.randint(-3,3))
-        else:
-            # we use our 'expert' to predict the next action.
-            action = expert.predict(None)
-
-        
+    
         try:
+            if error_being_induced == True:
+                action = (0.5,steer_error)
+            else:
+                # we use our 'expert' to predict the next action.
+                action = expert.predict(None)
+            
             observation, reward, done, info = env.step(action)
-        except:
-            break
-        # we can resize the image here
-        observation = cv2.resize(observation, (80, 60))
-        observation = observation[TOP_CROP_VALUE:60, 0:80]
-        # NOTICE: OpenCV changes the order of the channels !!!
-        observation = cv2.cvtColor(observation, cv2.COLOR_BGR2RGB)
 
+            # we can resize the image here
+            observation = cv2.resize(observation, (80, 60))
+            observation = observation[TOP_CROP_VALUE:60, 0:80]
+            #observation = observation[0:60, 0:80]
+            # NOTICE: OpenCV changes the order of the channels !!!
+            observation = cv2.cvtColor(observation, cv2.COLOR_BGR2RGB)
+        except:
+            print('error caught')
+            break
         # we may use this to debug our expert.
         if DEBUG:
             cv2.imshow('debug', observation)

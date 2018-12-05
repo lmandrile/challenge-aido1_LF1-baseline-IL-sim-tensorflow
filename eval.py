@@ -1,11 +1,13 @@
 from model import TensorflowModel
 from gym_duckietown.envs import DuckietownEnv
+import cv2
 
 # configuration zone
 # yes, remember the simulator give us an outrageously large image
 # we preprocessed in the logs, but here we rely on the preprocessing step in the model
 OBSERVATIONS_SHAPE = (None, 480, 640, 3)
-ACTIONS_SHAPE = (None, 2)
+#ACTIONS_SHAPE = (None, 2)
+ACTIONS_SHAPE = (None, 1)
 SEED = 1234
 STORAGE_LOCATION = "trained_models/behavioral_cloning"
 EPISODES = 10
@@ -33,7 +35,8 @@ cumulative_reward = 0.0
 for episode in range(0, EPISODES):
     for steps in range(0, STEPS):
         action = model.predict(observation)
-        observation, reward, done, info = env.step(action)
+        print(observation.shape)
+        observation, reward, done, info = env.step((action))
         # we may use this to debug our expert.
         if DEBUG:
             cv2.imshow('debug', observation)

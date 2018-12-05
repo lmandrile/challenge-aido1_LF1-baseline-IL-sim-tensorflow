@@ -3,7 +3,7 @@ import numpy as np
 
 # parameters for the pure pursuit controller
 POSITION_THRESHOLD = 0.04
-REF_VELOCITY = 0.8
+REF_VELOCITY = 0.7
 GAIN = 10
 FOLLOWING_DISTANCE = 0.3
 
