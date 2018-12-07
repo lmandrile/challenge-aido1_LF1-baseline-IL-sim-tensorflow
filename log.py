@@ -1,88 +1,90 @@
 import cv2
-import random
 from gym_duckietown.envs import DuckietownEnv
 from teacher import PurePursuitExpert
 from _loggers import Logger
 
+import pygame
+
+
+USER_INPUT = True
+key = "no input"
+
+if USER_INPUT:
+    pygame.init()
+    windowSurface = pygame.display.set_mode((50, 50), 0, 32)
+    windowSurface.fill((0,0,0))
+
+
+def get_user_direction():
+    global key
+    
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_a:
+                key = "left"
+            elif event.key == pygame.K_d:
+                key = "right"
+        if event.type == pygame.KEYUP:
+            key = "no input"
+
+    return key
+
+
+
 # Log configuration, you can pick your own values here
 # the more the better? or the smarter the better?
-
-#EPISODES = 45
-#STEPS = 512
-EPISODES = 1500
-STEPS = 200
-
+EPISODES = 5
+STEPS = 20000
 
 DEBUG = True
-TOP_CROP_VALUE = 17
-ERROR_GENERATION_CHANCE = 1
-STEPS_PER_ERROR_GENERATION = 20
 
+#for map_name in ["loop_obstacles"]:
+for map_name in ["udem1"]:
+    env = DuckietownEnv(
+        map_name=map_name,  # check the Duckietown Gym documentation, there are many maps of different complexity
+        max_steps=EPISODES * STEPS,
+        distortion=True,
+        domain_rand=False
+    )
 
-    
+    # this is an imperfect demonstrator... I'm sure you can construct a better one.
+    expert = PurePursuitExpert(env=env)
 
-env = DuckietownEnv(
-    map_name='udem1',  # check the Duckietown Gym documentation, there are many maps of different complexity
-    max_steps=EPISODES * STEPS,
-    domain_rand=False,
-    distortion=True,
-    
-)
+    # please notice
+    logger = Logger(env, log_file='train.log')
 
-# this is an imperfect demonstrator... I'm sure you can construct a better one.
-expert = PurePursuitExpert(env=env)
-
-# please notice
-logger = Logger(env, log_file='train.log')
-
-error_being_induced = False
-error_step_count = STEPS_PER_ERROR_GENERATION
-steer_error = 0
-
-# let's collect our samples
-for episode in range(0, EPISODES):
-    for steps in range(0, STEPS):
-
-        if error_being_induced == False and random.randint(1,101)<=ERROR_GENERATION_CHANCE:
-            error_being_induced = True
-            error_step_count = STEPS_PER_ERROR_GENERATION
-            steer_error = random.randint(-1,1)
-
-        elif error_being_induced == True and error_step_count == 0:
-            error_being_induced = False
-    
-        try:
-            if error_being_induced == True:
-                action = (0.5,steer_error)
-            else:
-                # we use our 'expert' to predict the next action.
-                action = expert.predict(None)
+    # let's collect our samples
+    for episode in range(0, EPISODES):
+        for steps in range(0, STEPS):
             
-            observation, reward, done, info = env.step(action)
+            if USER_INPUT:
+                key = get_user_direction()
+            
+            try:
+                # we use our 'expert' to predict the next action.
+                action = expert.predict(None, user_input=key)
+                observation_big, reward, done, info = env.step(action)
+                # we can resize the image here
+                observation = cv2.resize(observation_big, (80, 60))
+                # NOTICE: OpenCV changes the order of the channels !!!
+                observation = cv2.cvtColor(observation, cv2.COLOR_BGR2RGB)
+                #observation = cv2.cvtColor(observation, cv2.COLOR_BGR2GRAY)
 
-            # we can resize the image here
-            observation = cv2.resize(observation, (80, 60))
-            observation = observation[TOP_CROP_VALUE:60, 0:80]
-            #observation = observation[0:60, 0:80]
-            # NOTICE: OpenCV changes the order of the channels !!!
-            observation = cv2.cvtColor(observation, cv2.COLOR_BGR2RGB)
-        except:
-            print('error caught')
-            break
-        # we may use this to debug our expert.
-        if DEBUG:
-            cv2.imshow('debug', observation)
-            cv2.waitKey(1)
+                flip_action =(action[0], - action[1])
+                flip_observation = cv2.flip(observation, 1)
+            except:
+                break
+            # we may use this to debug our expert.
+            if DEBUG:
+                cv2.imshow('debug', cv2.resize(observation, (0,0), fx=3, fy=3))
+                cv2.waitKey(1)
 
-        #If we're not inducing an error, record the data
-        if error_being_induced == False:
             logger.log(observation, action, reward, done, info)
-        else:
-            error_step_count -= 1
-        # [optional] env.render() to watch the expert interaction with the environment
-        # we log here
-    logger.on_episode_done()  # speed up logging by flushing the file
-    env.reset()
+            logger.log(flip_observation, flip_action, reward, done, info)
+            # [optional] env.render() to watch the expert interaction with the environment
+            # we log here
+        logger.on_episode_done()  # speed up logging by flushing the file
+        env.reset()
 
 # we flush everything and close the file, it should be ~ 120mb
 # NOTICE: we make the log file read-only, this prevent us from erasing all collected data by mistake
