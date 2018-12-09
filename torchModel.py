@@ -39,7 +39,6 @@ class TorchModel(nn.Module):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-        print(shape(x))
         x = self.finalLayer(x)
 
         return x
