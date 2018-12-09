@@ -14,19 +14,19 @@ class TorchModel(nn.Module):
 
         self.layer1 = nn.Sequential(
             nn.Conv2d(3, 32, 5, 1, 2),
-            nn.MaxPool2d(kernel_size = 2, stride = 2),
+            nn.MaxPool2d(kernel_size = 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.BatchNorm2d(32)
         )
         self.layer2 = nn.Sequential(
             nn.Conv2d(32, 64, 5, 1, 2),
-            nn.MaxPool2d(kernel_size = 2, stride = 2),
+            nn.MaxPool2d(kernel_size = 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.BatchNorm2d(64)
         )
         self.layer3 = nn.Sequential(
             nn.Conv2d(32, 128, 5, 1, 2),
-            nn.MaxPool2d(kernel_size = 2, stride = 2),
+            nn.MaxPool2d(kernel_size = 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.BatchNorm2d(128)
         )
