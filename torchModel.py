@@ -25,7 +25,7 @@ class TorchModel(nn.Module):
             nn.BatchNorm2d(64)
         )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(32, 128, 5, 1, 2),
+            nn.Conv2d(64, 128, 5, 1, 2),
             nn.MaxPool2d(kernel_size = 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.BatchNorm2d(128)
