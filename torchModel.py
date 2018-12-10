@@ -40,7 +40,7 @@ class TorchModel(nn.Module):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-        x.view(x.shape[0],-1)
+        x = x.view(x.shape[0],-1)
         x = self.finalLayer(x)
 
         return x
