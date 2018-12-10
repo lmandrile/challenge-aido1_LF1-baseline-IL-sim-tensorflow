@@ -29,9 +29,10 @@ class TorchModel(nn.Module):
             nn.MaxPool2d(kernel_size = 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.BatchNorm2d(128)
+
         )
+        
         #layers * entry img x * entry img y
-        print(action_shape)
         self.finalLayer = nn.Linear(128*observation_shape[1] * observation_shape[2], action_shape[1])
 
     def forward(self, x):
@@ -39,6 +40,7 @@ class TorchModel(nn.Module):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
+        x.view(x.shape[0],-1)
         x = self.finalLayer(x)
 
         return x
